@@ -264,36 +264,6 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
 	runDownloadFlags.OutputDir = "."
 }
 
-func (suite *DockerRunSuite) TestRun_GenericSubmitPython() {
-	expectedStdout := "hello world"
-	args := []string{"docker", "run",
-		"python",
-		"--wait",
-		"--download",
-		"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
-		"--",
-		"/bin/bash", "-c", "python hello.py"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
 func (suite *DockerRunSuite) TestRun_SubmitInputs() {
 	tests := []struct {
 		numberOfJobs int
