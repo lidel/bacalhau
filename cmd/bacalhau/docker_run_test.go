@@ -60,83 +60,83 @@ func (suite *DockerRunSuite) TearDownAllSuite() {
 
 // TODO: Refactor all of these tests to use common functionality; they're all very similar
 
-// func (suite *DockerRunSuite) TestRun_GenericSubmit() {
-// 	tests := []struct {
-// 		numberOfJobs int
-// 	}{
-// 		{numberOfJobs: 1}, // Test for one
-// 		{numberOfJobs: 5}, // Test for five
-// 	}
+func (suite *DockerRunSuite) TestRun_GenericSubmit() {
+	tests := []struct {
+		numberOfJobs int
+	}{
+		{numberOfJobs: 1}, // Test for one
+		{numberOfJobs: 5}, // Test for five
+	}
 
-// 	for i, tc := range tests {
-// 		func() {
-// 			ctx := context.Background()
-// 			c, cm := publicapi.SetupTests(suite.T())
-// 			defer cm.Cleanup()
+	for i, tc := range tests {
+		func() {
+			ctx := context.Background()
+			c, cm := publicapi.SetupTests(suite.T())
+			defer cm.Cleanup()
 
-// 			parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 			_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, "docker", "run",
-// 				"--api-host", host,
-// 				"--api-port", port,
-// 				"ubuntu echo 'hello world'",
-// 			)
-// 			require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %d. Job number: %d", tc.numberOfJobs, i)
+			parsedBasedURI, _ := url.Parse(c.BaseURI)
+			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+			_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, "docker", "run",
+				"--api-host", host,
+				"--api-port", port,
+				"ubuntu echo 'hello world'",
+			)
+			require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %d. Job number: %d", tc.numberOfJobs, i)
 
-// 			job, _, err := c.Get(ctx, strings.TrimSpace(out))
-// 			require.NoError(suite.T(), err)
-// 			require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
-// 		}()
-// 	}
-// }
+			job, _, err := c.Get(ctx, strings.TrimSpace(out))
+			require.NoError(suite.T(), err)
+			require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+		}()
+	}
+}
 
-// func (suite *DockerRunSuite) TestRun_GPURequests() {
-// 	tests := []struct {
-// 		submitArgs []string
-// 		fatalErr   bool
-// 		errString  string
-// 		numGPUs    string
-// 	}{
-// 		{submitArgs: []string{"--gpu=1", "nvidia/cuda:11.0.3-base-ubuntu20.04", "nvidia-smi"}, fatalErr: false, errString: "", numGPUs: "1"},
-// 	}
+func (suite *DockerRunSuite) TestRun_GPURequests() {
+	tests := []struct {
+		submitArgs []string
+		fatalErr   bool
+		errString  string
+		numGPUs    string
+	}{
+		{submitArgs: []string{"--gpu=1", "nvidia/cuda:11.0.3-base-ubuntu20.04", "nvidia-smi"}, fatalErr: false, errString: "", numGPUs: "1"},
+	}
 
-// 	for i, tc := range tests {
-// 		func() {
+	for i, tc := range tests {
+		func() {
 
-// 			var logBuf = new(bytes.Buffer)
-// 			var Stdout = struct{ io.Writer }{os.Stdout}
-// 			log.Logger = log.With().Logger().Output(io.MultiWriter(Stdout, logBuf))
+			var logBuf = new(bytes.Buffer)
+			var Stdout = struct{ io.Writer }{os.Stdout}
+			log.Logger = log.With().Logger().Output(io.MultiWriter(Stdout, logBuf))
 
-// 			ctx := context.Background()
-// 			c, cm := publicapi.SetupTests(suite.T())
-// 			defer cm.Cleanup()
+			ctx := context.Background()
+			c, cm := publicapi.SetupTests(suite.T())
+			defer cm.Cleanup()
 
-// 			parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 			allArgs := []string{"docker", "run", "--api-host", host, "--api-port", port}
-// 			allArgs = append(allArgs, tc.submitArgs...)
-// 			_, out, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
+			parsedBasedURI, _ := url.Parse(c.BaseURI)
+			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+			allArgs := []string{"docker", "run", "--api-host", host, "--api-port", port}
+			allArgs = append(allArgs, tc.submitArgs...)
+			_, out, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
 
-// 			if tc.fatalErr {
-// 				require.Contains(suite.T(), out, tc.errString, "Did not find expected error message for fatalError in error string.\nExpected: %s\nActual: %s", tc.errString, out)
-// 				return
-// 			} else {
-// 				require.NoError(suite.T(), submitErr, "Error submitting job. Run - Test-Number: %d - String: %s", i, tc.submitArgs)
-// 			}
+			if tc.fatalErr {
+				require.Contains(suite.T(), out, tc.errString, "Did not find expected error message for fatalError in error string.\nExpected: %s\nActual: %s", tc.errString, out)
+				return
+			} else {
+				require.NoError(suite.T(), submitErr, "Error submitting job. Run - Test-Number: %d - String: %s", i, tc.submitArgs)
+			}
 
-// 			require.True(suite.T(), !tc.fatalErr, "Expected fatal err, but submitted.")
+			require.True(suite.T(), !tc.fatalErr, "Expected fatal err, but submitted.")
 
-// 			job, foundJob, getErr := c.Get(ctx, strings.TrimSpace(out))
-// 			require.True(suite.T(), foundJob, "error getting job")
-// 			require.NotNil(suite.T(), job, "Failed to get job with ID: %s\nErr: %+v", out, getErr)
-// 			if tc.errString != "" {
-// 				o := logBuf.String()
-// 				require.Contains(suite.T(), o, tc.errString, "Did not find expected error message in error string.\nExpected: %s\nActual: %s", tc.errString, o)
-// 			}
-// 			require.Equal(suite.T(), tc.numGPUs, job.Spec.Resources.GPU, "Expected %d GPUs, but got %d", tc.numGPUs, job.Spec.Resources.GPU)
-// 		}()
-// 	}
-// }
+			job, foundJob, getErr := c.Get(ctx, strings.TrimSpace(out))
+			require.True(suite.T(), foundJob, "error getting job")
+			require.NotNil(suite.T(), job, "Failed to get job with ID: %s\nErr: %+v", out, getErr)
+			if tc.errString != "" {
+				o := logBuf.String()
+				require.Contains(suite.T(), o, tc.errString, "Did not find expected error message in error string.\nExpected: %s\nActual: %s", tc.errString, o)
+			}
+			require.Equal(suite.T(), tc.numGPUs, job.Spec.Resources.GPU, "Expected %d GPUs, but got %d", tc.numGPUs, job.Spec.Resources.GPU)
+		}()
+	}
+}
 
 func (suite *DockerRunSuite) TestRun_GenericSubmitWait() {
 	tests := []struct {
@@ -181,352 +181,571 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitWait() {
 	}
 }
 
-// func (suite *DockerRunSuite) TestRun_GenericSubmitLocal() {
-// 	expectedStdout := "hello"
-// 	args := []string{"docker", "run", "ubuntu", "echo", expectedStdout, "--local", "--wait", "--download"}
-// 	done := capture()
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocal() {
+	expectedStdout := "hello"
+	args := []string{"docker", "run", "ubuntu", "echo", expectedStdout, "--local", "--wait", "--download"}
+	done := capture()
 
-// 	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocal-")
-// 	defer func() {
-// 		err := os.RemoveAll(dir)
-// 		require.NoError(suite.T(), err)
-// 	}()
-// 	runDownloadFlags.OutputDir = dir
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocal-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-// 	out, _ := done()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 	require.NoError(suite.T(), err)
-// 	trimmedStdout := strings.TrimSpace(string(out))
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
 
-// 	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout[3:], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 	runDownloadFlags.OutputDir = "."
-// }
+	runDownloadFlags.OutputDir = "."
+}
 
-// func (suite *DockerRunSuite) TestRun_GenericSubmitLocalInput() {
-// 	CID := "QmZULkCELmmk5XNfCgTnCyFgAVxBRBXyDHGGMVoLFLiXEN"
-// 	args := []string{"docker", "run",
-// 		"--local",
-// 		"--wait",
-// 		"--download",
-// 		"-v", fmt.Sprintf("%s:/hello.txt", CID),
-// 		"ubuntu",
-// 		"cat", "hello.txt"}
-// 	expectedStdout := "hello"
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocalInput() {
+	CID := "QmZULkCELmmk5XNfCgTnCyFgAVxBRBXyDHGGMVoLFLiXEN"
+	args := []string{"docker", "run",
+		"--local",
+		"--wait",
+		"--download",
+		"-v", fmt.Sprintf("%s:/hello.txt", CID),
+		"ubuntu",
+		"cat", "hello.txt"}
+	expectedStdout := "hello"
 
-// 	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalInput-")
-// 	defer func() {
-// 		err := os.RemoveAll(dir)
-// 		require.NoError(suite.T(), err)
-// 	}()
-// 	runDownloadFlags.OutputDir = dir
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalInput-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 	done := capture()
-// 	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-// 	out, _ := done()
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 	require.NoError(suite.T(), err)
-// 	trimmedStdout := strings.TrimSpace(string(out))
-// 	fmt.Println(trimmedStdout)
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout[3:], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 	runDownloadFlags.OutputDir = "."
-// }
+	runDownloadFlags.OutputDir = "."
+}
 
-// func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
-// 	args := []string{"docker", "run",
-// 		"ubuntu",
-// 		"--local",
-// 		"--wait",
-// 		"--download",
-// 		"-w", "/outputs",
-// 		"--",
-// 		"/bin/bash", "-c", "printf hello > hello.txt"}
-// 	expectedStdout := "hello"
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
+	args := []string{"docker", "run",
+		"ubuntu",
+		"--local",
+		"--wait",
+		"--download",
+		"-w", "/outputs",
+		"--",
+		"/bin/bash", "-c", "printf hello > hello.txt"}
+	expectedStdout := "hello"
 
-// 	// done := capture()
-// 	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-// 	if err != nil {
-// 		fmt.Print(err)
-// 	}
-// 	// out, _ := done()
+	// done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	if err != nil {
+		fmt.Print(err)
+	}
+	// out, _ := done()
 
-// 	require.NoError(suite.T(), err)
-// 	content, _ := ioutil.ReadFile("volumes/outputs/hello.txt")
-// 	out := string(content)
-// 	trimmedStdout := strings.TrimSpace(string(out))
-// 	fmt.Println(trimmedStdout)
+	require.NoError(suite.T(), err)
+	content, _ := ioutil.ReadFile("volumes/outputs/hello.txt")
+	out := string(content)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 	runDownloadFlags.OutputDir = "."
-// }
+	runDownloadFlags.OutputDir = "."
+}
 
-// func (suite *DockerRunSuite) TestRun_SubmitInputs() {
-// 	tests := []struct {
-// 		numberOfJobs int
-// 	}{
-// 		{numberOfJobs: 1},
-// 	}
+func (suite *DockerRunSuite) TestRun_GenericSubmitPython() {
+	expectedStdout := "hello world"
+	args := []string{"docker", "run",
+		"python",
+		"--wait",
+		"--download",
+		"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
+		"--",
+		"/bin/bash", "-c", "python hello.py"}
 
-// 	for i, tc := range tests {
-// 		type (
-// 			InputVolume struct {
-// 				cid  string
-// 				path string
-// 				flag string
-// 			}
-// 		)
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 		testCids := []struct {
-// 			inputVolumes []InputVolume
-// 			err          error
-// 		}{
-// 			{inputVolumes: []InputVolume{{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHA", path: "", flag: "-i"}}, err: nil}, // Fake CID, but well structured
-// 			{inputVolumes: []InputVolume{
-// 				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHB", path: "", flag: "-i"},
-// 				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHC", path: "", flag: "-i"}}, err: nil}, // 2x Fake CID, but well structured
-// 			{inputVolumes: []InputVolume{
-// 				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHD", path: "/CUSTOM_INPUT_PATH_1", flag: "-v"}}, err: nil}, // Fake CID, but well structured
-// 			{inputVolumes: []InputVolume{
-// 				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHE", path: "", flag: "-i"},
-// 				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHF", path: "/CUSTOM_INPUT_PATH_2", flag: "-v"}}, err: nil}, // 2x Fake CID, but well structured
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 		}
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 		for _, tcids := range testCids {
-// 			func() {
-// 				ctx := context.Background()
-// 				c, cm := publicapi.SetupTests(suite.T())
-// 				defer cm.Cleanup()
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 				parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 				flagsArray := []string{"docker", "run",
-// 					"--api-host", host,
-// 					"--api-port", port}
-// 				for _, iv := range tcids.inputVolumes {
-// 					ivString := iv.cid
-// 					if iv.path != "" {
-// 						ivString += fmt.Sprintf(":%s", iv.path)
-// 					}
-// 					flagsArray = append(flagsArray, iv.flag, ivString)
-// 				}
-// 				flagsArray = append(flagsArray, "ubuntu cat /inputs/foo.txt") // This doesn't exist, but shouldn't error
+	runDownloadFlags.OutputDir = "."
+}
 
-// 				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
-// 					flagsArray...,
-// 				)
-// 				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %s. Job number: %s", tc.numberOfJobs, i)
+func (suite *DockerRunSuite) TestRun_GenericSubmitDuckDB() {
+	content, _ := ioutil.ReadFile("../../testdata/integrationdata/duckdb/stdout")
+	expectedStdout := strings.TrimSpace(string(content))
+	args := []string{"docker", "run",
+		"davidgasquez/datadex:v0.2.0",
+		"--wait",
+		"--download",
+		"-w", "/inputs/",
+		"--",
+		"/bin/bash", "-c", "duckdb -s 'select 1'"}
 
-// 				job, _, err := c.Get(ctx, strings.TrimSpace(out))
-// 				require.NoError(suite.T(), err)
-// 				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 				require.Equal(suite.T(), len(tcids.inputVolumes), len(job.Spec.Inputs), "Number of job inputs != # of test inputs .")
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 				// Need to do the below because ordering is not guaranteed
-// 				for _, tcidIV := range tcids.inputVolumes {
-// 					testCIDinJobInputs := false
-// 					for _, jobInput := range job.Spec.Inputs {
-// 						if tcidIV.cid == jobInput.Cid {
-// 							testCIDinJobInputs = true
-// 							testPath := "/inputs"
-// 							if tcidIV.path != "" {
-// 								testPath = tcidIV.path
-// 							}
-// 							require.Equal(suite.T(), testPath, jobInput.Path, "Test Path not equal to Path from job.")
-// 							break
-// 						}
-// 					}
-// 					require.True(suite.T(), testCIDinJobInputs, "Test CID not in job inputs.")
-// 				}
-// 			}()
-// 		}
-// 	}
-// }
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// func (suite *DockerRunSuite) TestRun_SubmitUrlInputs() {
-// 	tests := []struct {
-// 		numberOfJobs int
-// 	}{
-// 		{numberOfJobs: 1},
-// 	}
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 	for i, tc := range tests {
-// 		type (
-// 			InputURL struct {
-// 				url  string
-// 				path string
-// 				flag string
-// 			}
-// 		)
+	runDownloadFlags.OutputDir = "."
+}
 
-// 		testURLs := []struct {
-// 			inputURLs []InputURL
-// 			err       error
-// 		}{
-// 			{inputURLs: []InputURL{{url: "http://foo.com/bar.tar.gz", path: "/app/data.tar.gz", flag: "-u"}}, err: nil},
-// 			{inputURLs: []InputURL{{url: "https://qaz.edu/sam.zip", path: "/app/sam.zip", flag: "-u"}}, err: nil},
-// 			{inputURLs: []InputURL{{url: "https://ifps.io/CID", path: "/app/file.csv", flag: "-u"}}, err: nil},
-// 		}
-// 		jobOutputVolumes = []string{} // TODO reset all cli variables
+// bacalhau -v QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files -w /files  docker run amancevice/pandas -- /bin/bash -c 'python read_csv.py'
+func (suite *DockerRunSuite) TestRun_GenericSubmitPandas() {
+	content, _ := ioutil.ReadFile("../../testdata/integrationdata/pandas/stdout")
+	expectedStdout := strings.TrimSpace(string(content))
+	args := []string{"docker", "run",
+		"amancevice/pandas",
+		"--wait",
+		"--download",
+		"-v", "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files",
+		"-w", "/files",
+		"--",
+		"/bin/bash", "-c", "python read_csv.py"}
 
-// 		for _, turls := range testURLs {
-// 			func() {
-// 				ctx := context.Background()
-// 				c, cm := publicapi.SetupTests(suite.T())
-// 				defer cm.Cleanup()
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 				parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 				flagsArray := []string{"docker", "run",
-// 					"--api-host", host,
-// 					"--api-port", port}
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 				for _, iurl := range turls.inputURLs {
-// 					iurlString := iurl.url
-// 					if iurl.path != "" {
-// 						iurlString += fmt.Sprintf(":%s", iurl.path)
-// 					}
-// 					flagsArray = append(flagsArray, iurl.flag, iurlString)
-// 				}
-// 				flagsArray = append(flagsArray, "ubuntu cat /app/foo_data.txt")
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
-// 					flagsArray...,
-// 				)
-// 				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %s. Job number: %s", tc.numberOfJobs, i)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 				job, _, err := c.Get(ctx, strings.TrimSpace(out))
-// 				require.NoError(suite.T(), err)
-// 				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+	runDownloadFlags.OutputDir = "."
+}
 
-// 				require.Equal(suite.T(), len(turls.inputURLs), len(job.Spec.Inputs), "Number of job urls != # of test urls.")
+func (suite *DockerRunSuite) TestRun_GenericSubmitPytorch() {
+	content, _ := ioutil.ReadFile("../../testdata/integrationdata/pytorch/stdout")
+	expectedStdout := string(content)
+	args := []string{"docker", "run",
+		"pytorch/pytorch",
+		"--wait",
+		"--download",
+		"-v", "QmZWPdWyuWxiJAqPC2nQXTp7P9geYNN75ZmnhoCT2jqnoe:/train.py",
+		"--",
+		"/bin/bash", "-c", "cd /;python train.py"}
 
-// 				// Need to do the below because ordering is not guaranteed
-// 				for _, turlIU := range turls.inputURLs {
-// 					testURLinJobInputs := false
-// 					for _, jobInput := range job.Spec.Inputs {
-// 						if turlIU.url == jobInput.URL {
-// 							testURLinJobInputs = true
-// 							testPath := "/app2"
-// 							if turlIU.path != "" {
-// 								testPath = turlIU.path
-// 							}
-// 							require.Equal(suite.T(), testPath, jobInput.Path, "Test Path not equal to Path from job.")
-// 							break
-// 						}
-// 					}
-// 					require.True(suite.T(), testURLinJobInputs, "Test URL not in job inputs.")
-// 				}
-// 			}()
-// 		}
-// 	}
-// }
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// func (suite *DockerRunSuite) TestRun_SubmitOutputs() {
-// 	tests := []struct {
-// 		numberOfJobs int
-// 	}{
-// 		{numberOfJobs: 1},
-// 	}
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 	for i, tc := range tests {
-// 		type (
-// 			OutputVolumes struct {
-// 				name string
-// 				path string
-// 			}
-// 		)
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 		testCids := []struct {
-// 			outputVolumes []OutputVolumes
-// 			correctLength int
-// 			err           string
-// 		}{
-// 			{outputVolumes: []OutputVolumes{{name: "", path: ""}}, correctLength: 1, err: ""},                                                                     // Flag not provided
-// 			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME", path: "/outputs_1"}}, correctLength: 2, err: ""},                                                // Correct output flag
-// 			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME_2", path: "/outputs_2"}, {name: "OUTPUT_NAME_3", path: "/outputs_3"}}, correctLength: 3, err: ""}, // 2 correct output flags
-// 			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME_4", path: ""}}, correctLength: 0, err: "invalid output volume"},                                   // OV requested but no path (should error)
-// 			{outputVolumes: []OutputVolumes{{name: "", path: "/outputs_4"}}, correctLength: 0, err: "invalid output volume"},                                      // OV requested but no name (should error)
-// 		}
+	require.Equal(suite.T(), expectedStdout[:6], trimmedStdout[:6], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 		for _, tcids := range testCids {
-// 			func() {
-// 				ctx := context.Background()
-// 				c, cm := publicapi.SetupTests(suite.T())
-// 				defer cm.Cleanup()
+	runDownloadFlags.OutputDir = "."
+}
 
-// 				parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 				flagsArray := []string{"docker", "run",
-// 					"--api-host", host,
-// 					"--api-port", port}
-// 				ovString := ""
-// 				for _, ov := range tcids.outputVolumes {
-// 					if ov.name != "" {
-// 						ovString = ov.name
-// 					}
-// 					if ov.path != "" {
-// 						ovString += fmt.Sprintf(":%s", ov.path)
-// 					}
-// 					if ovString != "" {
-// 						flagsArray = append(flagsArray, "-o", ovString)
-// 					}
-// 				}
-// 				flagsArray = append(flagsArray, "ubuntu echo 'hello world'")
+func (suite *DockerRunSuite) TestRun_GenericSubmitR() {
+	content, _ := ioutil.ReadFile("../../testdata/integrationdata/r/stdout")
+	expectedStdout := string(content)
+	args := []string{"docker", "run",
+		"jsace/r-prophet",
+		"--download",
+		"--wait",
+		"-v", "QmZiwZz7fXAvQANKYnt7ya838VPpj4agJt5EDvRYp3Deeo:/input",
+		"-o", "output:/output",
+		"--",
+		"/bin/bash", "-c", "Rscript Saturating-Forecasts.R  input/example_wp_log_R.csv output/output0.pdf output/output1.pdf"}
 
-// 				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
-// 					flagsArray...,
-// 				)
-// 				if tcids.err != "" {
-// 					require.Error(suite.T(), err, "Expected an error, but none provided. %+v", tcids)
-// 					require.Contains(suite.T(), err.Error(), "invalid output volume", "Missed detection of invalid output volume.")
-// 					return // Go to next in loop
-// 				}
-// 				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %d. Job number: %d", tc.numberOfJobs, i)
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
 
-// 				job, _, err := c.Get(ctx, strings.TrimSpace(out))
-// 				require.NoError(suite.T(), err)
-// 				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
 
-// 				require.Equal(suite.T(), tcids.correctLength, len(job.Spec.Outputs), "Number of job outputs != correct number.")
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
 
-// 				// Need to do the below because ordering is not guaranteed
-// 				for _, tcidOV := range tcids.outputVolumes {
-// 					testNameinJobOutputs := false
-// 					testPathinJobOutputs := false
-// 					for _, jobOutput := range job.Spec.Outputs {
-// 						if tcidOV.name == "" {
-// 							if jobOutput.Name == "outputs" {
-// 								testNameinJobOutputs = true
-// 							}
-// 						} else {
-// 							if tcidOV.name == jobOutput.Name {
-// 								testNameinJobOutputs = true
-// 							}
-// 						}
+	require.Equal(suite.T(), expectedStdout[:3], trimmedStdout[:3], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
-// 						if tcidOV.path == "" {
-// 							if jobOutput.Path == "/outputs" {
-// 								testPathinJobOutputs = true
-// 							}
-// 						} else {
-// 							if tcidOV.path == jobOutput.Path {
-// 								testPathinJobOutputs = true
-// 							}
-// 						}
-// 					}
-// 					require.True(suite.T(), testNameinJobOutputs, "Test OutputVolume Name not in job output names.")
-// 					require.True(suite.T(), testPathinJobOutputs, "Test OutputVolume Path not in job output paths.")
-// 				}
-// 			}()
-// 		}
-// 	}
-// }
+	runDownloadFlags.OutputDir = "."
+
+}
+func (suite *DockerRunSuite) TestRun_GenericSubmitSklearn() {
+	expectedStdout := "[1]"
+	args := []string{"docker", "run",
+		"bitnami/scikit-learn-intel",
+		"--wait",
+		"--download",
+		"-v", "QmQ43onwDwW1kPZ9A4GxVY7n68DjG846S9AzPDLRV5T94b:/train.py",
+		"--",
+		"/bin/bash", "-c", "cd /;python train.py"}
+
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
+
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
+
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
+
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+
+	runDownloadFlags.OutputDir = "."
+}
+
+func (suite *DockerRunSuite) TestRun_GenericSubmitTensorflow() {
+	content, _ := ioutil.ReadFile("../../testdata/integrationdata/tensorflow/stdout")
+	expectedStdout := string(content)
+	args := []string{"docker", "run",
+		"tensorflow/tensorflow",
+		"--wait",
+		"--download",
+		"-v", "QmcWjFB2bSEhRLr6vwN2MZyDNvZNSqBtHK1dMk2c2uu2Bg:/train.py",
+		"--",
+		"/bin/bash", "-c", "cd /;python train.py"}
+
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
+
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
+
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
+
+	require.Equal(suite.T(), expectedStdout[:5], trimmedStdout[:5], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+
+	runDownloadFlags.OutputDir = "."
+
+}
+
+func (suite *DockerRunSuite) TestRun_SubmitInputs() {
+	tests := []struct {
+		numberOfJobs int
+	}{
+		{numberOfJobs: 1},
+	}
+
+	for i, tc := range tests {
+		type (
+			InputVolume struct {
+				cid  string
+				path string
+				flag string
+			}
+		)
+
+		testCids := []struct {
+			inputVolumes []InputVolume
+			err          error
+		}{
+			{inputVolumes: []InputVolume{{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHA", path: "", flag: "-i"}}, err: nil}, // Fake CID, but well structured
+			{inputVolumes: []InputVolume{
+				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHB", path: "", flag: "-i"},
+				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHC", path: "", flag: "-i"}}, err: nil}, // 2x Fake CID, but well structured
+			{inputVolumes: []InputVolume{
+				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHD", path: "/CUSTOM_INPUT_PATH_1", flag: "-v"}}, err: nil}, // Fake CID, but well structured
+			{inputVolumes: []InputVolume{
+				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHE", path: "", flag: "-i"},
+				{cid: "QmZUCdf9ZdpbHdr9pU8XjdUMKutKa1aVSrLZZWC4uY4pHF", path: "/CUSTOM_INPUT_PATH_2", flag: "-v"}}, err: nil}, // 2x Fake CID, but well structured
+
+		}
+
+		for _, tcids := range testCids {
+			func() {
+				ctx := context.Background()
+				c, cm := publicapi.SetupTests(suite.T())
+				defer cm.Cleanup()
+
+				parsedBasedURI, _ := url.Parse(c.BaseURI)
+				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+				flagsArray := []string{"docker", "run",
+					"--api-host", host,
+					"--api-port", port}
+				for _, iv := range tcids.inputVolumes {
+					ivString := iv.cid
+					if iv.path != "" {
+						ivString += fmt.Sprintf(":%s", iv.path)
+					}
+					flagsArray = append(flagsArray, iv.flag, ivString)
+				}
+				flagsArray = append(flagsArray, "ubuntu cat /inputs/foo.txt") // This doesn't exist, but shouldn't error
+
+				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
+					flagsArray...,
+				)
+				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %s. Job number: %s", tc.numberOfJobs, i)
+
+				job, _, err := c.Get(ctx, strings.TrimSpace(out))
+				require.NoError(suite.T(), err)
+				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+
+				require.Equal(suite.T(), len(tcids.inputVolumes), len(job.Spec.Inputs), "Number of job inputs != # of test inputs .")
+
+				// Need to do the below because ordering is not guaranteed
+				for _, tcidIV := range tcids.inputVolumes {
+					testCIDinJobInputs := false
+					for _, jobInput := range job.Spec.Inputs {
+						if tcidIV.cid == jobInput.Cid {
+							testCIDinJobInputs = true
+							testPath := "/inputs"
+							if tcidIV.path != "" {
+								testPath = tcidIV.path
+							}
+							require.Equal(suite.T(), testPath, jobInput.Path, "Test Path not equal to Path from job.")
+							break
+						}
+					}
+					require.True(suite.T(), testCIDinJobInputs, "Test CID not in job inputs.")
+				}
+			}()
+		}
+	}
+}
+
+func (suite *DockerRunSuite) TestRun_SubmitUrlInputs() {
+	tests := []struct {
+		numberOfJobs int
+	}{
+		{numberOfJobs: 1},
+	}
+
+	for i, tc := range tests {
+		type (
+			InputURL struct {
+				url  string
+				path string
+				flag string
+			}
+		)
+
+		testURLs := []struct {
+			inputURLs []InputURL
+			err       error
+		}{
+			{inputURLs: []InputURL{{url: "http://foo.com/bar.tar.gz", path: "/app/data.tar.gz", flag: "-u"}}, err: nil},
+			{inputURLs: []InputURL{{url: "https://qaz.edu/sam.zip", path: "/app/sam.zip", flag: "-u"}}, err: nil},
+			{inputURLs: []InputURL{{url: "https://ifps.io/CID", path: "/app/file.csv", flag: "-u"}}, err: nil},
+		}
+		jobOutputVolumes = []string{} // TODO reset all cli variables
+
+		for _, turls := range testURLs {
+			func() {
+				ctx := context.Background()
+				c, cm := publicapi.SetupTests(suite.T())
+				defer cm.Cleanup()
+
+				parsedBasedURI, _ := url.Parse(c.BaseURI)
+				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+				flagsArray := []string{"docker", "run",
+					"--api-host", host,
+					"--api-port", port}
+
+				for _, iurl := range turls.inputURLs {
+					iurlString := iurl.url
+					if iurl.path != "" {
+						iurlString += fmt.Sprintf(":%s", iurl.path)
+					}
+					flagsArray = append(flagsArray, iurl.flag, iurlString)
+				}
+				flagsArray = append(flagsArray, "ubuntu cat /app/foo_data.txt")
+
+				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
+					flagsArray...,
+				)
+				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %s. Job number: %s", tc.numberOfJobs, i)
+
+				job, _, err := c.Get(ctx, strings.TrimSpace(out))
+				require.NoError(suite.T(), err)
+				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+
+				require.Equal(suite.T(), len(turls.inputURLs), len(job.Spec.Inputs), "Number of job urls != # of test urls.")
+
+				// Need to do the below because ordering is not guaranteed
+				for _, turlIU := range turls.inputURLs {
+					testURLinJobInputs := false
+					for _, jobInput := range job.Spec.Inputs {
+						if turlIU.url == jobInput.URL {
+							testURLinJobInputs = true
+							testPath := "/app2"
+							if turlIU.path != "" {
+								testPath = turlIU.path
+							}
+							require.Equal(suite.T(), testPath, jobInput.Path, "Test Path not equal to Path from job.")
+							break
+						}
+					}
+					require.True(suite.T(), testURLinJobInputs, "Test URL not in job inputs.")
+				}
+			}()
+		}
+	}
+}
+
+func (suite *DockerRunSuite) TestRun_SubmitOutputs() {
+	tests := []struct {
+		numberOfJobs int
+	}{
+		{numberOfJobs: 1},
+	}
+
+	for i, tc := range tests {
+		type (
+			OutputVolumes struct {
+				name string
+				path string
+			}
+		)
+
+		testCids := []struct {
+			outputVolumes []OutputVolumes
+			correctLength int
+			err           string
+		}{
+			{outputVolumes: []OutputVolumes{{name: "", path: ""}}, correctLength: 1, err: ""},                                                                     // Flag not provided
+			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME", path: "/outputs_1"}}, correctLength: 2, err: ""},                                                // Correct output flag
+			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME_2", path: "/outputs_2"}, {name: "OUTPUT_NAME_3", path: "/outputs_3"}}, correctLength: 3, err: ""}, // 2 correct output flags
+			{outputVolumes: []OutputVolumes{{name: "OUTPUT_NAME_4", path: ""}}, correctLength: 0, err: "invalid output volume"},                                   // OV requested but no path (should error)
+			{outputVolumes: []OutputVolumes{{name: "", path: "/outputs_4"}}, correctLength: 0, err: "invalid output volume"},                                      // OV requested but no name (should error)
+		}
+
+		for _, tcids := range testCids {
+			func() {
+				ctx := context.Background()
+				c, cm := publicapi.SetupTests(suite.T())
+				defer cm.Cleanup()
+
+				parsedBasedURI, _ := url.Parse(c.BaseURI)
+				host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+				flagsArray := []string{"docker", "run",
+					"--api-host", host,
+					"--api-port", port}
+				ovString := ""
+				for _, ov := range tcids.outputVolumes {
+					if ov.name != "" {
+						ovString = ov.name
+					}
+					if ov.path != "" {
+						ovString += fmt.Sprintf(":%s", ov.path)
+					}
+					if ovString != "" {
+						flagsArray = append(flagsArray, "-o", ovString)
+					}
+				}
+				flagsArray = append(flagsArray, "ubuntu echo 'hello world'")
+
+				_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
+					flagsArray...,
+				)
+				if tcids.err != "" {
+					require.Error(suite.T(), err, "Expected an error, but none provided. %+v", tcids)
+					require.Contains(suite.T(), err.Error(), "invalid output volume", "Missed detection of invalid output volume.")
+					return // Go to next in loop
+				}
+				require.NoError(suite.T(), err, "Error submitting job. Run - Number of Jobs: %d. Job number: %d", tc.numberOfJobs, i)
+
+				job, _, err := c.Get(ctx, strings.TrimSpace(out))
+				require.NoError(suite.T(), err)
+				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+
+				require.Equal(suite.T(), tcids.correctLength, len(job.Spec.Outputs), "Number of job outputs != correct number.")
+
+				// Need to do the below because ordering is not guaranteed
+				for _, tcidOV := range tcids.outputVolumes {
+					testNameinJobOutputs := false
+					testPathinJobOutputs := false
+					for _, jobOutput := range job.Spec.Outputs {
+						if tcidOV.name == "" {
+							if jobOutput.Name == "outputs" {
+								testNameinJobOutputs = true
+							}
+						} else {
+							if tcidOV.name == jobOutput.Name {
+								testNameinJobOutputs = true
+							}
+						}
+
+						if tcidOV.path == "" {
+							if jobOutput.Path == "/outputs" {
+								testPathinJobOutputs = true
+							}
+						} else {
+							if tcidOV.path == jobOutput.Path {
+								testPathinJobOutputs = true
+							}
+						}
+					}
+					require.True(suite.T(), testNameinJobOutputs, "Test OutputVolume Name not in job output names.")
+					require.True(suite.T(), testPathinJobOutputs, "Test OutputVolume Path not in job output paths.")
+				}
+			}()
+		}
+	}
+}
 
 func (suite *DockerRunSuite) TestRun_CreatedAt() {
 	tests := []struct {
@@ -654,150 +873,150 @@ Actual Annotations: %+v
 	}
 }
 
-// func (suite *DockerRunSuite) TestRun_EdgeCaseCLI() {
-// 	tests := []struct {
-// 		submitArgs []string
-// 		fatalErr   bool
-// 		errString  string
-// 	}{
-// 		{submitArgs: []string{"ubuntu", "-foo -bar -baz"}, fatalErr: true, errString: "unknown shorthand flag"},     // submitting flag will fail if not separated with a --
-// 		{submitArgs: []string{"ubuntu", "python -foo -bar -baz"}, fatalErr: false, errString: ""},                   // separating with -- should work and allow flags
-// 		{submitArgs: []string{"ubuntu", "baz -foo -bar -baz *.jpg"}, fatalErr: false, errString: "contains a glob"}, // contains a glob, and should fail
-// 		{submitArgs: []string{"ubuntu", "/bin/bash *.jpg"}, fatalErr: false, errString: ""},                         // contains a glob but starts with a shell (and a space)
-// 		// {submitString: "-v QmeZRGhe4PmjctYVSVHuEiA9oSXnqmYa4kQubSHgWbjv72:/input_images -o results:/output_images dpokidov/imagemagick -- magick mogrify -fx '((g-b)/(r+g+b))>0.02 ? 1 : 0' -resize 256x256 -quality 100 -path /output_images /input_images/*.jpg"},
-// 	}
+func (suite *DockerRunSuite) TestRun_EdgeCaseCLI() {
+	tests := []struct {
+		submitArgs []string
+		fatalErr   bool
+		errString  string
+	}{
+		{submitArgs: []string{"ubuntu", "-foo -bar -baz"}, fatalErr: true, errString: "unknown shorthand flag"},     // submitting flag will fail if not separated with a --
+		{submitArgs: []string{"ubuntu", "python -foo -bar -baz"}, fatalErr: false, errString: ""},                   // separating with -- should work and allow flags
+		{submitArgs: []string{"ubuntu", "baz -foo -bar -baz *.jpg"}, fatalErr: false, errString: "contains a glob"}, // contains a glob, and should fail
+		{submitArgs: []string{"ubuntu", "/bin/bash *.jpg"}, fatalErr: false, errString: ""},                         // contains a glob but starts with a shell (and a space)
+		// {submitString: "-v QmeZRGhe4PmjctYVSVHuEiA9oSXnqmYa4kQubSHgWbjv72:/input_images -o results:/output_images dpokidov/imagemagick -- magick mogrify -fx '((g-b)/(r+g+b))>0.02 ? 1 : 0' -resize 256x256 -quality 100 -path /output_images /input_images/*.jpg"},
+	}
 
-// 	for i, tc := range tests {
-// 		func() {
+	for i, tc := range tests {
+		func() {
 
-// 			var logBuf = new(bytes.Buffer)
-// 			var Stdout = struct{ io.Writer }{os.Stdout}
-// 			log.Logger = log.With().Logger().Output(io.MultiWriter(Stdout, logBuf))
+			var logBuf = new(bytes.Buffer)
+			var Stdout = struct{ io.Writer }{os.Stdout}
+			log.Logger = log.With().Logger().Output(io.MultiWriter(Stdout, logBuf))
 
-// 			ctx := context.Background()
-// 			c, cm := publicapi.SetupTests(suite.T())
-// 			defer cm.Cleanup()
+			ctx := context.Background()
+			c, cm := publicapi.SetupTests(suite.T())
+			defer cm.Cleanup()
 
-// 			parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 			allArgs := []string{"docker", "run", "--api-host", host, "--api-port", port}
-// 			allArgs = append(allArgs, tc.submitArgs...)
-// 			_, out, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
+			parsedBasedURI, _ := url.Parse(c.BaseURI)
+			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+			allArgs := []string{"docker", "run", "--api-host", host, "--api-port", port}
+			allArgs = append(allArgs, tc.submitArgs...)
+			_, out, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
 
-// 			if tc.fatalErr {
-// 				require.Contains(suite.T(), out, tc.errString, "Did not find expected error message for fatalError in error string.\nExpected: %s\nActual: %s", tc.errString, out)
-// 				return
-// 			} else {
-// 				require.NoError(suite.T(), submitErr, "Error submitting job. Run - Test-Number: %d - String: %s", i, tc.submitArgs)
-// 			}
+			if tc.fatalErr {
+				require.Contains(suite.T(), out, tc.errString, "Did not find expected error message for fatalError in error string.\nExpected: %s\nActual: %s", tc.errString, out)
+				return
+			} else {
+				require.NoError(suite.T(), submitErr, "Error submitting job. Run - Test-Number: %d - String: %s", i, tc.submitArgs)
+			}
 
-// 			require.True(suite.T(), !tc.fatalErr, "Expected fatal err, but submitted.")
+			require.True(suite.T(), !tc.fatalErr, "Expected fatal err, but submitted.")
 
-// 			job, foundJob, getErr := c.Get(ctx, strings.TrimSpace(out))
-// 			require.True(suite.T(), foundJob, "error getting job")
-// 			require.NotNil(suite.T(), job, "Failed to get job with ID: %s\nErr: %+v", out, getErr)
-// 			if tc.errString != "" {
-// 				o := logBuf.String()
-// 				require.Contains(suite.T(), o, tc.errString, "Did not find expected error message in error string.\nExpected: %s\nActual: %s", tc.errString, o)
-// 			}
-// 		}()
-// 	}
-// }
+			job, foundJob, getErr := c.Get(ctx, strings.TrimSpace(out))
+			require.True(suite.T(), foundJob, "error getting job")
+			require.NotNil(suite.T(), job, "Failed to get job with ID: %s\nErr: %+v", out, getErr)
+			if tc.errString != "" {
+				o := logBuf.String()
+				require.Contains(suite.T(), o, tc.errString, "Did not find expected error message in error string.\nExpected: %s\nActual: %s", tc.errString, o)
+			}
+		}()
+	}
+}
 
-// func (suite *DockerRunSuite) TestRun_SubmitWorkdir() {
-// 	tests := []struct {
-// 		workdir    string
-// 		error_code int
-// 	}{
-// 		{workdir: "", error_code: 0},
-// 		{workdir: "/", error_code: 0},
-// 		{workdir: "./mydir", error_code: 1},
-// 		{workdir: "../mydir", error_code: 1},
-// 		{workdir: "http://foo.com", error_code: 1},
-// 		{workdir: "/foo//", error_code: 0}, // double forward slash is allowed in unix
-// 		{workdir: "/foo//bar", error_code: 0},
-// 	}
+func (suite *DockerRunSuite) TestRun_SubmitWorkdir() {
+	tests := []struct {
+		workdir    string
+		error_code int
+	}{
+		{workdir: "", error_code: 0},
+		{workdir: "/", error_code: 0},
+		{workdir: "./mydir", error_code: 1},
+		{workdir: "../mydir", error_code: 1},
+		{workdir: "http://foo.com", error_code: 1},
+		{workdir: "/foo//", error_code: 0}, // double forward slash is allowed in unix
+		{workdir: "/foo//bar", error_code: 0},
+	}
 
-// 	// TODO reset all cli variables
-// 	jobOutputVolumes = []string{}
+	// TODO reset all cli variables
+	jobOutputVolumes = []string{}
 
-// 	for _, tc := range tests {
-// 		func() {
-// 			ctx := context.Background()
-// 			c, cm := publicapi.SetupTests(suite.T())
-// 			defer cm.Cleanup()
+	for _, tc := range tests {
+		func() {
+			ctx := context.Background()
+			c, cm := publicapi.SetupTests(suite.T())
+			defer cm.Cleanup()
 
-// 			parsedBasedURI, _ := url.Parse(c.BaseURI)
-// 			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
-// 			flagsArray := []string{"docker", "run",
-// 				"--api-host", host,
-// 				"--api-port", port}
-// 			flagsArray = append(flagsArray, "-w", tc.workdir)
-// 			flagsArray = append(flagsArray, "ubuntu pwd")
+			parsedBasedURI, _ := url.Parse(c.BaseURI)
+			host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+			flagsArray := []string{"docker", "run",
+				"--api-host", host,
+				"--api-port", port}
+			flagsArray = append(flagsArray, "-w", tc.workdir)
+			flagsArray = append(flagsArray, "ubuntu pwd")
 
-// 			_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
-// 				flagsArray...,
-// 			)
+			_, out, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd,
+				flagsArray...,
+			)
 
-// 			if tc.error_code != 0 {
-// 				require.Error(suite.T(), err)
-// 			} else {
-// 				require.NoError(suite.T(), err, "Error submitting job.")
-// 				job, _, err := c.Get(ctx, strings.TrimSpace(out))
-// 				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
-// 				require.Equal(suite.T(), tc.workdir, job.Spec.Docker.WorkingDir, "Job workdir != test workdir.")
-// 				require.NoError(suite.T(), err, "Error in running command.")
-// 			}
-// 		}()
-// 	}
-// }
+			if tc.error_code != 0 {
+				require.Error(suite.T(), err)
+			} else {
+				require.NoError(suite.T(), err, "Error submitting job.")
+				job, _, err := c.Get(ctx, strings.TrimSpace(out))
+				require.NotNil(suite.T(), job, "Failed to get job with ID: %s", out)
+				require.Equal(suite.T(), tc.workdir, job.Spec.Docker.WorkingDir, "Job workdir != test workdir.")
+				require.NoError(suite.T(), err, "Error in running command.")
+			}
+		}()
+	}
+}
 
-// func (suite *DockerRunSuite) TestRun_ExplodeVideos() {
-// 	const nodeCount = 1
+func (suite *DockerRunSuite) TestRun_ExplodeVideos() {
+	const nodeCount = 1
 
-// 	videos := []string{
-// 		"Bird flying over the lake.mp4",
-// 		"Calm waves on a rocky sea gulf.mp4",
-// 		"Prominent Late Gothic styled architecture.mp4",
-// 	}
+	videos := []string{
+		"Bird flying over the lake.mp4",
+		"Calm waves on a rocky sea gulf.mp4",
+		"Prominent Late Gothic styled architecture.mp4",
+	}
 
-// 	stack, cm := devstack.SetupTest(
-// 		suite.T(),
-// 		nodeCount,
-// 		0,
-// 		computenode.NewDefaultComputeNodeConfig(),
-// 	)
-// 	defer cm.Cleanup()
+	stack, cm := devstack.SetupTest(
+		suite.T(),
+		nodeCount,
+		0,
+		computenode.NewDefaultComputeNodeConfig(),
+	)
+	defer cm.Cleanup()
 
-// 	dirPath, err := os.MkdirTemp("", "sharding-test")
-// 	require.NoError(suite.T(), err)
-// 	for _, video := range videos {
-// 		err = os.WriteFile(
-// 			fmt.Sprintf("%s/%s", dirPath, video),
-// 			[]byte(fmt.Sprintf("hello %s", video)),
-// 			0644,
-// 		)
-// 		require.NoError(suite.T(), err)
-// 	}
+	dirPath, err := os.MkdirTemp("", "sharding-test")
+	require.NoError(suite.T(), err)
+	for _, video := range videos {
+		err = os.WriteFile(
+			fmt.Sprintf("%s/%s", dirPath, video),
+			[]byte(fmt.Sprintf("hello %s", video)),
+			0644,
+		)
+		require.NoError(suite.T(), err)
+	}
 
-// 	directoryCid, err := stack.AddFileToNodes(nodeCount, dirPath)
-// 	require.NoError(suite.T(), err)
+	directoryCid, err := stack.AddFileToNodes(nodeCount, dirPath)
+	require.NoError(suite.T(), err)
 
-// 	parsedBasedURI, _ := url.Parse(stack.Nodes[0].APIServer.GetURI())
-// 	host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
+	parsedBasedURI, _ := url.Parse(stack.Nodes[0].APIServer.GetURI())
+	host, port, _ := net.SplitHostPort(parsedBasedURI.Host)
 
-// 	allArgs := []string{
-// 		"docker", "run",
-// 		"--api-host", host,
-// 		"--api-port", port,
-// 		"--wait",
-// 		"-v", fmt.Sprintf("%s:/inputs", directoryCid),
-// 		"--sharding-base-path", "/inputs",
-// 		"--sharding-glob-pattern", "*.mp4",
-// 		"--sharding-batch-size", "1",
-// 		"ubuntu", "echo", "hello",
-// 	}
+	allArgs := []string{
+		"docker", "run",
+		"--api-host", host,
+		"--api-port", port,
+		"--wait",
+		"-v", fmt.Sprintf("%s:/inputs", directoryCid),
+		"--sharding-base-path", "/inputs",
+		"--sharding-glob-pattern", "*.mp4",
+		"--sharding-batch-size", "1",
+		"ubuntu", "echo", "hello",
+	}
 
-// 	_, _, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
-// 	require.NoError(suite.T(), submitErr)
-// }
+	_, _, submitErr := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, allArgs...)
+	require.NoError(suite.T(), submitErr)
+}
