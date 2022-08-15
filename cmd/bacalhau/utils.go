@@ -200,11 +200,9 @@ func setupDownloadFlags(cmd *cobra.Command, settings *ipfs.DownloadSettings) {
 		settings.IPFSSwarmAddrs, "Comma-separated list of IPFS nodes to connect to.")
 }
 
-// get the common string between string1 and string2
 //nolint:unused,deadcode
-func findCommonString(string1 string, string2 string) string {
+func findCommonString(string1, string2 string) string {
 	m := regexp.MustCompile(string1)
 	cs := m.FindString(string2)
 	return cs
-
 }
