@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"regexp"
 	"time"
 
 	"strings"
@@ -229,6 +230,40 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalInput() {
 	require.NoError(suite.T(), err)
 	trimmedStdout := strings.TrimSpace(string(out))
 	fmt.Println(trimmedStdout)
+
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+
+	runDownloadFlags.OutputDir = "."
+}
+
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPython() {
+	CID := "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk"
+	args := []string{"docker", "run",
+		"--local",
+		"--wait",
+		"--download",
+		"-v", fmt.Sprintf("%s:/hello.py", CID),
+		"python",
+		"--",
+		"/bin/bash", "-c", "python hello.py"}
+	expectedStdout := "hello"
+
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
+
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
+
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
+	re := regexp.MustCompile(`(?m)[a-zA-Z]+`)
+	trimmedStdout = re.FindString(trimmedStdout)
 
 	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
