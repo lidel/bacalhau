@@ -101,6 +101,7 @@ jobs:
                     -- \
                       ./pkg/... ./cmd/... \
                       ${COVERAGE_OPTS} --tags=unit
+                no_output_timeout: 30m
             - run:
                 name: Upload results
                 command: |
