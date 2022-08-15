@@ -264,222 +264,66 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
 	runDownloadFlags.OutputDir = "."
 }
 
-func (suite *DockerRunSuite) TestRun_GenericSubmitPython() {
-	expectedStdout := "hello world"
-	args := []string{"docker", "run",
-		"python",
-		"--wait",
-		"--download",
-		"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
-		"--",
-		"/bin/bash", "-c", "python hello.py"}
+func (suite *DockerRunSuite) TestRun_GenericIntegration() {
+	integrationTests := []struct {
+		testName           string
+		expectedStdoutPath string
+		expectedStdoutLen  int
+		command            []string
+	}{
+		{testName: "Python",
+			expectedStdoutPath: "../../testdata/integrationdata/python/stdout",
+			expectedStdoutLen:  2,
+			command: []string{
+				"python",
+				"--wait",
+				"--download",
+				"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
+				"--",
+				"/bin/bash", "-c", "python hello.py"}},
+		{testName: "Pandas",
+			expectedStdoutPath: "../../testdata/integrationdata/pandas/stdout",
+			expectedStdoutLen:  2,
+			command: []string{
+				"amancevice/pandas",
+				"--wait",
+				"--download",
+				"-v", "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files",
+				"-w", "/files",
+				"--",
+				"/bin/bash", "-c", "python read_csv.py"}},
+	}
 
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
-	defer func() {
-		err := os.RemoveAll(dir)
+	for _, ttests := range integrationTests {
+		content, _ := ioutil.ReadFile(ttests.expectedStdoutPath)
+		expectedStdout := strings.TrimSpace(string(content))
+		flagsArray := []string{"docker", "run", "--local"}
+		flagsArray = append(flagsArray, ttests.command...)
+		dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmit"+ttests.testName+"-")
+		defer func() {
+			err := os.RemoveAll(dir)
+			require.NoError(suite.T(), err)
+		}()
+		runDownloadFlags.OutputDir = dir
+
+		done := capture()
+		_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, flagsArray...)
+		out, _ := done()
+
 		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
+		trimmedStdout := strings.TrimSpace(string(out))
+		// fmt.Println(expectedStdout)
+		// fmt.Println(trimmedStdout)
+		// fmt.Println(strings.Contains(expectedStdout, trimmedStdout))
+		cs := findCommonString(expectedStdout[:ttests.expectedStdoutLen], trimmedStdout)
+		// var cleanStdout string
+		// if strings.Contains(expectedStdout, trimmedStdout) {
+		// 	cleanStdout = expectedStdout
+		// }
+		require.Equal(suite.T(), expectedStdout[:ttests.expectedStdoutLen], cs, "Expected %s as output, but got %s", expectedStdout, cs)
+		runDownloadFlags.OutputDir = "."
 
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
-func (suite *DockerRunSuite) TestRun_GenericSubmitDuckDB() {
-	content, _ := ioutil.ReadFile("../../testdata/integrationdata/duckdb/stdout")
-	expectedStdout := strings.TrimSpace(string(content))
-	args := []string{"docker", "run",
-		"davidgasquez/datadex:v0.2.0",
-		"--wait",
-		"--download",
-		"-w", "/inputs/",
-		"--",
-		"/bin/bash", "-c", "duckdb -s 'select 1'"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
-// bacalhau -v QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files -w /files  docker run amancevice/pandas -- /bin/bash -c 'python read_csv.py'
-func (suite *DockerRunSuite) TestRun_GenericSubmitPandas() {
-	content, _ := ioutil.ReadFile("../../testdata/integrationdata/pandas/stdout")
-	expectedStdout := strings.TrimSpace(string(content))
-	args := []string{"docker", "run",
-		"amancevice/pandas",
-		"--wait",
-		"--download",
-		"-v", "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files",
-		"-w", "/files",
-		"--",
-		"/bin/bash", "-c", "python read_csv.py"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
-func (suite *DockerRunSuite) TestRun_GenericSubmitPytorch() {
-	content, _ := ioutil.ReadFile("../../testdata/integrationdata/pytorch/stdout")
-	expectedStdout := string(content)
-	args := []string{"docker", "run",
-		"pytorch/pytorch",
-		"--wait",
-		"--download",
-		"-v", "QmZWPdWyuWxiJAqPC2nQXTp7P9geYNN75ZmnhoCT2jqnoe:/train.py",
-		"--",
-		"/bin/bash", "-c", "cd /;python train.py"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout[:6], trimmedStdout[:6], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
-func (suite *DockerRunSuite) TestRun_GenericSubmitR() {
-	content, _ := ioutil.ReadFile("../../testdata/integrationdata/r/stdout")
-	expectedStdout := string(content)
-	args := []string{"docker", "run",
-		"jsace/r-prophet",
-		"--download",
-		"--wait",
-		"-v", "QmZiwZz7fXAvQANKYnt7ya838VPpj4agJt5EDvRYp3Deeo:/input",
-		"-o", "output:/output",
-		"--",
-		"/bin/bash", "-c", "Rscript Saturating-Forecasts.R  input/example_wp_log_R.csv output/output0.pdf output/output1.pdf"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout[:3], trimmedStdout[:3], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-
-}
-func (suite *DockerRunSuite) TestRun_GenericSubmitSklearn() {
-	expectedStdout := "[1]"
-	args := []string{"docker", "run",
-		"bitnami/scikit-learn-intel",
-		"--wait",
-		"--download",
-		"-v", "QmQ43onwDwW1kPZ9A4GxVY7n68DjG846S9AzPDLRV5T94b:/train.py",
-		"--",
-		"/bin/bash", "-c", "cd /;python train.py"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPython-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
-}
-
-func (suite *DockerRunSuite) TestRun_GenericSubmitTensorflow() {
-	content, _ := ioutil.ReadFile("../../testdata/integrationdata/tensorflow/stdout")
-	expectedStdout := string(content)
-	args := []string{"docker", "run",
-		"tensorflow/tensorflow",
-		"--wait",
-		"--download",
-		"-v", "QmcWjFB2bSEhRLr6vwN2MZyDNvZNSqBtHK1dMk2c2uu2Bg:/train.py",
-		"--",
-		"/bin/bash", "-c", "cd /;python train.py"}
-
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalSklearn-")
-	defer func() {
-		err := os.RemoveAll(dir)
-		require.NoError(suite.T(), err)
-	}()
-	runDownloadFlags.OutputDir = dir
-
-	done := capture()
-	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
-	out, _ := done()
-
-	require.NoError(suite.T(), err)
-	trimmedStdout := strings.TrimSpace(string(out))
-	fmt.Println(trimmedStdout)
-
-	require.Equal(suite.T(), expectedStdout[:5], trimmedStdout[:5], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
-
-	runDownloadFlags.OutputDir = "."
+	}
 
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -197,4 +198,12 @@ func setupDownloadFlags(cmd *cobra.Command, settings *ipfs.DownloadSettings) {
 		settings.OutputDir, "Directory to write the output to.")
 	cmd.Flags().StringVar(&settings.IPFSSwarmAddrs, "ipfs-swarm-addrs",
 		settings.IPFSSwarmAddrs, "Comma-separated list of IPFS nodes to connect to.")
+}
+
+// get the common string between string1 and string2
+func findCommonString(string1 string, string2 string) string {
+	m := regexp.MustCompile(string1)
+	cs := m.FindString(string2)
+	return cs
+
 }
