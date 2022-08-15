@@ -269,7 +269,39 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPython() {
 
 	runDownloadFlags.OutputDir = "."
 }
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPandas() {
+	CID := "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz"
+	args := []string{"docker", "run",
+		"--wait",
+		"--download",
+		"-v", fmt.Sprintf("%s:/files", CID),
+		"amancevice/pandas",
+		"-w", "/files",
+		"--",
+		"/bin/bash", "-c", "python read_csv.py"}
+	expectedStdout := "hash"
 
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
+	defer func() {
+		err := os.RemoveAll(dir)
+		require.NoError(suite.T(), err)
+	}()
+	runDownloadFlags.OutputDir = dir
+
+	done := capture()
+	_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, args...)
+	out, _ := done()
+
+	require.NoError(suite.T(), err)
+	trimmedStdout := strings.TrimSpace(string(out))
+	fmt.Println(trimmedStdout)
+	re := regexp.MustCompile(`(?m)[a-zA-Z]+`)
+	trimmedStdout = re.FindString(trimmedStdout)
+
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+
+	runDownloadFlags.OutputDir = "."
+}
 func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
 	args := []string{"docker", "run",
 		"ubuntu",
