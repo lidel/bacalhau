@@ -281,11 +281,10 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 				"--",
 				"/bin/bash", "-c", "python hello.py"}},
 	}
-	time.Sleep(time.Minute)
 	for _, ttests := range integrationTests {
 		content, _ := ioutil.ReadFile(ttests.expectedStdoutPath)
 		expectedStdout := strings.TrimSpace(string(content))
-		flagsArray := []string{"docker", "run"}
+		flagsArray := []string{"docker", "run", "--local"}
 		flagsArray = append(flagsArray, ttests.command...)
 		dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmit"+ttests.testName+"-")
 		defer func() {
@@ -295,7 +294,9 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 		runDownloadFlags.OutputDir = dir
 
 		done := capture()
+		time.Sleep(15 * time.Second)
 		_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, flagsArray...)
+		time.Sleep(60 * time.Second)
 		out, _ := done()
 
 		require.NoError(suite.T(), err)
