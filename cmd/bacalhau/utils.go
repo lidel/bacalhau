@@ -201,6 +201,7 @@ func setupDownloadFlags(cmd *cobra.Command, settings *ipfs.DownloadSettings) {
 }
 
 // get the common string between string1 and string2
+//nolint:unused,deadcode
 func findCommonString(string1 string, string2 string) string {
 	m := regexp.MustCompile(string1)
 	cs := m.FindString(string2)
