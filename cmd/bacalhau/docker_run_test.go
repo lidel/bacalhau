@@ -282,7 +282,7 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 				"--",
 				"/bin/bash", "-c", "python hello.py"}},
 	}
-
+	time.Sleep(time.Minute)
 	for _, ttests := range integrationTests {
 		content, _ := ioutil.ReadFile(ttests.expectedStdoutPath)
 		expectedStdout := strings.TrimSpace(string(content))
