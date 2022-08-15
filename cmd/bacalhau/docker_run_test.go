@@ -264,58 +264,6 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalOutput() {
 	runDownloadFlags.OutputDir = "."
 }
 
-func (suite *DockerRunSuite) TestRun_GenericIntegration() {
-	integrationTests := []struct {
-		testName           string
-		expectedStdoutPath string
-		expectedStdoutLen  int
-		command            []string
-	}{
-		{testName: "Python",
-			expectedStdoutPath: "../../testdata/integrationdata/python/stdout",
-			expectedStdoutLen:  2,
-			command: []string{
-				"python",
-				"--download",
-				"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
-				"--",
-				"/bin/bash", "-c", "python hello.py"}},
-	}
-	for _, ttests := range integrationTests {
-		content, _ := ioutil.ReadFile(ttests.expectedStdoutPath)
-		expectedStdout := strings.TrimSpace(string(content))
-		flagsArray := []string{"docker", "run", "--local"}
-		flagsArray = append(flagsArray, ttests.command...)
-		dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmit"+ttests.testName+"-")
-		defer func() {
-			err := os.RemoveAll(dir)
-			require.NoError(suite.T(), err)
-		}()
-		runDownloadFlags.OutputDir = dir
-
-		done := capture()
-		time.Sleep(15 * time.Second)
-		_, _, err := ExecuteTestCobraCommand(suite.T(), suite.rootCmd, flagsArray...)
-		time.Sleep(60 * time.Second)
-		out, _ := done()
-
-		require.NoError(suite.T(), err)
-		trimmedStdout := strings.TrimSpace(string(out))
-		// fmt.Println(expectedStdout)
-		// fmt.Println(trimmedStdout)
-		// fmt.Println(strings.Contains(expectedStdout, trimmedStdout))
-		cs := findCommonString(expectedStdout[:ttests.expectedStdoutLen], trimmedStdout)
-		// var cleanStdout string
-		// if strings.Contains(expectedStdout, trimmedStdout) {
-		// 	cleanStdout = expectedStdout
-		// }
-		require.Equal(suite.T(), expectedStdout[:ttests.expectedStdoutLen], cs, "Expected %s as output, but got %s", expectedStdout, cs)
-		runDownloadFlags.OutputDir = "."
-
-	}
-
-}
-
 func (suite *DockerRunSuite) TestRun_SubmitInputs() {
 	tests := []struct {
 		numberOfJobs int
