@@ -281,17 +281,6 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 				"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
 				"--",
 				"/bin/bash", "-c", "python hello.py"}},
-		{testName: "Pandas",
-			expectedStdoutPath: "../../testdata/integrationdata/pandas/stdout",
-			expectedStdoutLen:  2,
-			command: []string{
-				"amancevice/pandas",
-				"--wait",
-				"--download",
-				"-v", "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz:/files",
-				"-w", "/files",
-				"--",
-				"/bin/bash", "-c", "python read_csv.py"}},
 	}
 
 	for _, ttests := range integrationTests {
