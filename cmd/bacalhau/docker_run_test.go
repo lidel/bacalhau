@@ -286,7 +286,7 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 	for _, ttests := range integrationTests {
 		content, _ := ioutil.ReadFile(ttests.expectedStdoutPath)
 		expectedStdout := strings.TrimSpace(string(content))
-		flagsArray := []string{"docker", "run", "--local"}
+		flagsArray := []string{"docker", "run"}
 		flagsArray = append(flagsArray, ttests.command...)
 		dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmit"+ttests.testName+"-")
 		defer func() {
@@ -350,6 +350,7 @@ func (suite *DockerRunSuite) TestRun_SubmitInputs() {
 
 		for _, tcids := range testCids {
 			func() {
+
 				ctx := context.Background()
 				c, cm := publicapi.SetupTests(suite.T())
 				defer cm.Cleanup()
