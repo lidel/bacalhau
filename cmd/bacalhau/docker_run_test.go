@@ -276,7 +276,6 @@ func (suite *DockerRunSuite) TestRun_GenericIntegration() {
 			expectedStdoutLen:  2,
 			command: []string{
 				"python",
-				"--wait",
 				"--download",
 				"-v", "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.py",
 				"--",
