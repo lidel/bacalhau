@@ -199,7 +199,7 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocal() {
 	require.NoError(suite.T(), err)
 	trimmedStdout := strings.TrimSpace(string(out))
 
-	require.Equal(suite.T(), expectedStdout, trimmedStdout[3:], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
 	runDownloadFlags.OutputDir = "."
 }
@@ -230,7 +230,7 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalInput() {
 	trimmedStdout := strings.TrimSpace(string(out))
 	fmt.Println(trimmedStdout)
 
-	require.Equal(suite.T(), expectedStdout, trimmedStdout[3:], "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
+	require.Equal(suite.T(), expectedStdout, trimmedStdout, "Expected %s as output, but got %s", expectedStdout, trimmedStdout)
 
 	runDownloadFlags.OutputDir = "."
 }
