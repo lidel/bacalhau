@@ -274,7 +274,6 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPython() {
 func (suite *DockerRunSuite) TestRun_GenericSubmitLocalR() {
 	CID := "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk"
 	args := []string{"docker", "run",
-		"--wait",
 		"--download",
 		"--local",
 		"-v", fmt.Sprintf("%s:/hello.R", CID),
