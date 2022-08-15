@@ -269,19 +269,21 @@ func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPython() {
 
 	runDownloadFlags.OutputDir = "."
 }
-func (suite *DockerRunSuite) TestRun_GenericSubmitLocalPandas() {
-	CID := "QmfKJT13h5k1b23ja3ZCVg5nFL9oKz2bVXc8oXgtwiwhjz"
+
+//  bacalhau docker run  --wait --download -v QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk:/hello.R r-base -- /bin/bash -c 'Rscript hello.R'
+func (suite *DockerRunSuite) TestRun_GenericSubmitLocalR() {
+	CID := "QmQRVx3gXVLaRXywgwo8GCTQ63fHqWV88FiwEqCidmUGhk"
 	args := []string{"docker", "run",
 		"--wait",
 		"--download",
-		"-v", fmt.Sprintf("%s:/files", CID),
-		"amancevice/pandas",
-		"-w", "/files",
+		"--local",
+		"-v", fmt.Sprintf("%s:/hello.R", CID),
+		"r-base",
 		"--",
-		"/bin/bash", "-c", "python read_csv.py"}
-	expectedStdout := "hash"
+		"/bin/bash", "-c", "Rscript hello.R"}
+	expectedStdout := "hello"
 
-	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalPandas-")
+	dir, _ := ioutil.TempDir("", "bacalhau-TestRun_GenericSubmitLocalR-")
 	defer func() {
 		err := os.RemoveAll(dir)
 		require.NoError(suite.T(), err)
